@@ -29,7 +29,7 @@ def download_data():
     datasets = ["train", "validation", "test"]
     
     for dataset in datasets:
-        output_path = raw_data_dir / f"{dataset}.jsonl.gz"
+        output_path = raw_data_dir / f"{dataset}-00000-of-00001.parquet"
         
         # Skip if file already exists
         if output_path.exists():
@@ -40,10 +40,10 @@ def download_data():
             # Download from HuggingFace
             print(f"  Downloading {dataset} dataset...")
             
-            # Use the official Microsoft MS MARCO dataset
+            # Use the correct repository and file path
             local_file = hf_hub_download(
-                repo_id="microsoft/ms_marco",
-                filename=f"{dataset}.jsonl.gz",  # MS MARCO uses jsonl.gz format
+                repo_id="datasets/microsoft/ms_marco",  # Note the 'datasets/' prefix
+                filename=f"v1.1/{dataset}-00000-of-00001.parquet",  # Correct path with version
                 local_dir=raw_data_dir
             )
             

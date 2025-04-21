@@ -1,0 +1,44 @@
+W&B initialized: ltr-model-20250421-171842
+Loading pre-trained embedding model...
+Loaded embedding model with 111712 words, dimension 100
+Loaded embedding model with vocabulary size: 111712
+Creating model towers...
+Model towers created successfully.
+Setting up dataset and dataloader...
+Dataset created with 575739 triplets
+Dataloader created with batch size 32
+Setting up optimizer...
+Optimizer created with learning rate 0.001
+Total trainable parameters: 20200
+Starting training...
+Training progress:  67%|██████████████▋       | 2/3 [03:50<01:55, 115.05s/it]
+Traceback (most recent call last):                                           
+  Average loss: 0.1728
+  Average loss: 0.1666 (improved by 3.55%)
+  File "/Users/alex/Documents/MLX/MLX_week02/src/training/train.py", line 209, in <module>
+    train()
+  File "/Users/alex/Documents/MLX/MLX_week02/src/training/train.py", line 114, in train
+    for query_batch, pos_doc_batch, neg_doc_batch in tqdm(
+                                                     ^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+               ^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/utils/data/dataloader.py", line 708, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/utils/data/dataloader.py", line 764, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/src/data/triplet_dataset.py", line 83, in __getitem__
+    negative_tensor = self._process_text(negative_text, self.max_length)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/src/data/triplet_dataset.py", line 64, in _process_text
+    token_ids = convert_to_token_ids(tokens, self.word2idx)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/src/utils/tokenization.py", line 62, in convert_to_token_ids
+    token_ids = [word2idx.get(token, word2idx.get('<UNK>', 0)) for token in tokens]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

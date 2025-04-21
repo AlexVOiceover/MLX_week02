@@ -1,0 +1,29 @@
+W&B initialized: ltr-model-20250421-165058
+Loading pre-trained embedding model...
+Loaded embedding model with 111712 words, dimension 100
+Loaded embedding model with vocabulary size: 111712
+Creating model towers...
+Model towers created successfully.
+Setting up dataset and dataloader...
+Dataset created with 575739 triplets
+Dataloader created with batch size 32
+Setting up optimizer...
+Traceback (most recent call last):
+  File "/Users/alex/Documents/MLX/MLX_week02/src/training/train.py", line 112, in <module>
+    train()
+  File "/Users/alex/Documents/MLX/MLX_week02/src/training/train.py", line 90, in train
+    optimizer = optim.Adam([
+                ^^^^^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/optim/adam.py", line 99, in __init__
+    super().__init__(params, defaults)
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/optim/optimizer.py", line 377, in __init__
+    self.add_param_group(cast(dict, param_group))
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/_compile.py", line 32, in inner
+    return disable_fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py", line 745, in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/alex/Documents/MLX/MLX_week02/venv/lib/python3.12/site-packages/torch/optim/optimizer.py", line 1096, in add_param_group
+    raise ValueError("some parameters appear in more than one parameter group")
+ValueError: some parameters appear in more than one parameter group

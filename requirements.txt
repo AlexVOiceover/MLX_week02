@@ -9,3 +9,6 @@ pathlib
 jupyter
 scikit-learn
 pyarrow
+huggingface_hub
+wandb
+python-dotenv

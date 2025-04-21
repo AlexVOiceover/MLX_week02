@@ -1,0 +1,7 @@
+{"time":"2025-04-21T17:24:06.397802+01:00","level":"INFO","msg":"stream: starting","core version":"0.19.9","symlink path":"/Users/alex/Documents/MLX/MLX_week02/wandb/run-20250421_172406-tlc4bf10/logs/debug-core.log"}
+{"time":"2025-04-21T17:24:06.650551+01:00","level":"INFO","msg":"created new stream","id":"tlc4bf10"}
+{"time":"2025-04-21T17:24:06.650701+01:00","level":"INFO","msg":"stream: started","id":"tlc4bf10"}
+{"time":"2025-04-21T17:24:06.651171+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"tlc4bf10"}
+{"time":"2025-04-21T17:24:06.651432+01:00","level":"INFO","msg":"sender: started","stream_id":"tlc4bf10"}
+{"time":"2025-04-21T17:24:06.65158+01:00","level":"INFO","msg":"handler: started","stream_id":"tlc4bf10"}
+{"time":"2025-04-21T17:24:06.861516+01:00","level":"INFO","msg":"Starting system monitor"}

@@ -1,0 +1,13 @@
+W&B initialized: ltr-model-20250421-170204
+Loading pre-trained embedding model...
+Loaded embedding model with 111712 words, dimension 100
+Loaded embedding model with vocabulary size: 111712
+Creating model towers...
+Model towers created successfully.
+Setting up dataset and dataloader...
+Dataset created with 575739 triplets
+Dataloader created with batch size 32
+Setting up optimizer...
+Optimizer created with learning rate 0.001
+Total trainable parameters: 20200
+Training complete!

@@ -1,0 +1,38 @@
+_wandb:
+    value:
+        cli_version: 0.19.9
+        m: []
+        python_version: 3.12.9
+        t:
+            "1":
+                - 1
+                - 49
+                - 55
+            "2":
+                - 1
+                - 49
+                - 55
+            "3":
+                - 1
+                - 13
+                - 16
+                - 23
+                - 55
+            "4": 3.12.9
+            "5": 0.19.9
+            "8":
+                - 5
+            "12": 0.19.9
+            "13": darwin-arm64
+batch_size:
+    value: 32
+embedding_model:
+    value: Apples96/cbow_model
+epochs:
+    value: 10
+learning_rate:
+    value: 0.001
+optimizer:
+    value: Adam
+triplet_margin:
+    value: 0.2

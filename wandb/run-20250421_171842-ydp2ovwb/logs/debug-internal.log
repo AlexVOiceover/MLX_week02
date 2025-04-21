@@ -1,0 +1,15 @@
+{"time":"2025-04-21T17:18:43.03507+01:00","level":"INFO","msg":"stream: starting","core version":"0.19.9","symlink path":"/Users/alex/Documents/MLX/MLX_week02/wandb/run-20250421_171842-ydp2ovwb/logs/debug-core.log"}
+{"time":"2025-04-21T17:18:43.296062+01:00","level":"INFO","msg":"created new stream","id":"ydp2ovwb"}
+{"time":"2025-04-21T17:18:43.296094+01:00","level":"INFO","msg":"stream: started","id":"ydp2ovwb"}
+{"time":"2025-04-21T17:18:43.29611+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"ydp2ovwb"}
+{"time":"2025-04-21T17:18:43.296131+01:00","level":"INFO","msg":"handler: started","stream_id":"ydp2ovwb"}
+{"time":"2025-04-21T17:18:43.29632+01:00","level":"INFO","msg":"sender: started","stream_id":"ydp2ovwb"}
+{"time":"2025-04-21T17:18:43.539365+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-04-21T17:22:37.755833+01:00","level":"INFO","msg":"stream: closing","id":"ydp2ovwb"}
+{"time":"2025-04-21T17:22:37.755881+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-04-21T17:22:37.756199+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-04-21T17:22:38.323893+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-04-21T17:22:38.782404+01:00","level":"INFO","msg":"handler: closed","stream_id":"ydp2ovwb"}
+{"time":"2025-04-21T17:22:38.782411+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"ydp2ovwb"}
+{"time":"2025-04-21T17:22:38.783087+01:00","level":"INFO","msg":"sender: closed","stream_id":"ydp2ovwb"}
+{"time":"2025-04-21T17:22:38.78311+01:00","level":"INFO","msg":"stream: closed","id":"ydp2ovwb"}

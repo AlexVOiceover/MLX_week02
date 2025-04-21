@@ -1,0 +1,11 @@
+torch
+numpy
+pandas
+matplotlib
+seaborn
+tqdm
+requests
+pathlib
+jupyter
+scikit-learn
+pyarrow

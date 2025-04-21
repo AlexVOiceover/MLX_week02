@@ -5,8 +5,8 @@ This ensures that the data files are available for training without needing to b
 
 import os
 import sys
+import requests
 from pathlib import Path
-from huggingface_hub import hf_hub_download
 import shutil
 
 # Add project root to path
@@ -37,19 +37,20 @@ def download_data():
             continue
         
         try:
-            # Download from HuggingFace
+            # Download from HuggingFace using direct URL
             print(f"  Downloading {dataset} dataset...")
             
-            # Use the correct repository and file path
-            local_file = hf_hub_download(
-                repo_id="datasets/microsoft/ms_marco",  # Note the 'datasets/' prefix
-                filename=f"v1.1/{dataset}-00000-of-00001.parquet",  # Correct path with version
-                local_dir=raw_data_dir
-            )
+            # Direct URL to the dataset file
+            url = f"https://huggingface.co/datasets/microsoft/ms_marco/resolve/main/v1.1/{dataset}-00000-of-00001.parquet"
             
-            # Move to the correct location if needed
-            if Path(local_file) != output_path:
-                shutil.move(local_file, output_path)
+            # Download the file
+            response = requests.get(url, stream=True)
+            response.raise_for_status()  # Raise exception for HTTP errors
+            
+            # Save the file
+            with open(output_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
                 
             print(f"  {dataset} dataset downloaded successfully")
             

@@ -8,6 +8,7 @@ import sys
 import requests
 from pathlib import Path
 import shutil
+import tempfile
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -67,6 +68,20 @@ def download_data():
         print("Please run the data processing notebook to create these files.")
     else:
         print("\nAll required files are available!")
+    
+    # Clean up any cache folders that might have been created
+    cleanup_paths = [
+        Path(".cache"),
+        Path(tempfile.gettempdir()) / "huggingface"
+    ]
+    
+    for path in cleanup_paths:
+        if path.exists() and path.is_dir():
+            try:
+                print(f"Cleaning up cache directory: {path}")
+                shutil.rmtree(path)
+            except Exception as e:
+                print(f"Warning: Could not clean up {path}: {e}")
     
     return True
 

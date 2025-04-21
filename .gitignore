@@ -27,8 +27,9 @@ ENV/
 # HITL folder (containing project guidelines)
 HITL/
 
-# Data
-data/
+# Data files (but not code)
+data/raw/
+data/processed/
 
 # Jupyter notebooks
 .ipynb_checkpoints

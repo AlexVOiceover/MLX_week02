@@ -51,3 +51,6 @@ checkpoints/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# WandB
+wandb/

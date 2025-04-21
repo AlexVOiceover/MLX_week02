@@ -25,15 +25,25 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Download Data
+## Data Preparation
 
-The project uses the MS MARCO dataset for training. To download the data:
+The project uses the MS MARCO dataset for training.
+
+Run the data preparation notebook to download and process the data:
 
 ```bash
-python scripts/download_data.py
+# If you haven't installed Jupyter yet
+pip install jupyter
+
+# Run the notebook
+jupyter notebook notebooks/process_msmarco.ipynb
 ```
 
-This script will download the raw data files from HuggingFace and check if the processed files exist.
+This notebook will:
+1. Download the MS MARCO dataset from HuggingFace (if not already downloaded)
+2. Process the raw data into JSON format:
+   - Extract queries, passages, and relevance information
+   - Create JSON files required for training (queries.json, passages.json, matches.json)
 
 ## Project Structure
 
@@ -48,8 +58,8 @@ This script will download the raw data files from HuggingFace and check if the p
   - `utils/`: Utility functions
     - `tokenization.py`: Text tokenization utilities
 
-- `scripts/`: Helper scripts
-  - `download_data.py`: Downloads required data files
+- `notebooks/`
+  - `process_msmarco.ipynb`: Downloads and processes MS MARCO data into JSON format
 
 - `data/`: Data files (gitignored)
   - `raw/`: Raw dataset files

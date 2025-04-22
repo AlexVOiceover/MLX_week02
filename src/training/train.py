@@ -22,7 +22,7 @@ load_dotenv()
 
 # Set up device for GPU training if available
 # This creates a device that will be either GPU (cuda) or CPU depending on availability
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 
@@ -36,7 +36,7 @@ def train():
     config = {
         "learning_rate": 0.003,
         "batch_size": 32,
-        "epochs": 3,
+        "epochs": 2,
         "triplet_margin": 0.2,
         "embedding_model": "Apples96/cbow_model",
         "optimizer": "Adam",

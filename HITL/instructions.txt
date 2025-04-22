@@ -1,185 +1,58 @@
-## 🔍 Project Title: Learn to Search — *“Learn to Rank”*
+### 🔍 **Learn to Search – Project Instructions (Updated)**
 
-### 📚 Project Scope
-
-This project explores building a neural information retrieval system — essentially teaching a model to "learn to search" using ranking techniques. The core idea is to train a model that takes a **query** and a **set of documents** and returns the documents **ranked by relevance**.
-
-The focus is on **Learning to Rank (LTR)** using deep learning methods. The main methodology revolves around embedding queries and documents in a shared space and using **triplet loss** to optimise ranking. The project goes from a **simple architecture** to more advanced structures and larger-scale datasets.
+This project focuses on building a simple, custom search engine using neural networks and a vector database. You'll work through core concepts of information retrieval using embedding models and similarity search.
 
 ---
 
-## 🧩 Core Tasks and Concepts
+## 🔧 Key Steps
 
-### 1. **Learn To Rank**
-
-- The fundamental problem: Given a **query** and a set of **documents**, learn to rank the documents from most to least relevant.
-- Model should **encode** both query and document into vectors.
-- Goal: Vectors for relevant documents should be **closer** to the query than those for irrelevant ones.
-
----
-
-## 🏗️ Project Architecture and Development Phases
-
-The development is split into **four progressive phases**:
+### 1. **Tokenizer**
+Build your own tokenizer:
+- Split text into words or subwords.
+- Convert each token into an **index** instead of using the raw token.
 
 ---
 
-### **Phase 1: Start Simple**
-
-#### Objective:
-- Build a **basic LTR model** that encodes both queries and documents using a simple architecture.
-
-#### Steps:
-1. **Shared Encoder**:
-   - Use a shared encoder (e.g., a small feedforward network or pre-trained embedding + pooling).
-   - Input: Tokenised query and document.
-   - Output: Fixed-size vector representations.
-
-2. **Average Pooling**:
-   - Apply **average pooling** over token embeddings for both query and document.
-   - Keep it simple: No attention or transformer-based models yet.
-
-3. **Distance Metric**:
-   - Use cosine similarity or Euclidean distance to compare the encoded query and document.
-
-4. **Triplet Construction**:
-   - For each query, create:
-     - A **positive document** (relevant)
-     - A **negative document** (non-relevant)
-
-5. **Loss Function: Triplet Loss**:
-   - `L = max(0, d(q, d_pos) - d(q, d_neg) + margin)`
-   - The goal is to bring relevant documents closer than non-relevant ones by a margin.
-
-6. **Training Loop**:
-   - Batch of triplets → Encode → Compute loss → Backpropagate.
-
-#### Expected Outcome:
-- A working model that can rank a few small queries and documents correctly using triplet loss.
+### 2. **CBOW Embedding**
+Implement a simple **CBOW (Continuous Bag of Words)** model:
+- Take the average of token embeddings for the entire input.
+- Use this to represent queries and documents as vectors.
 
 ---
 
-### **Phase 2: Scale Up With MS MARCO**
-
-#### Objective:
-- Scale the model to use the **MS MARCO** dataset, a standard benchmark in neural IR.
-
-#### Steps:
-1. **Load MS MARCO**:
-   - Use the **MS MARCO passage ranking** dataset.
-   - Each data point contains a query, a relevant passage, and many irrelevant passages.
-
-2. **Data Preprocessing**:
-   - Tokenisation
-   - Padding / Truncation
-   - Batch construction (queries + positives + sampled negatives)
-
-3. **Improved Sampling**:
-   - Consider **hard negatives** (documents that are similar but not relevant) for better training.
-   - Mine negatives dynamically if possible.
-
-4. **Infrastructure**:
-   - Efficient batching, possible use of PyTorch `DataLoader`.
-   - Consider training on GPU.
-
-5. **Monitoring**:
-   - Track ranking accuracy / NDCG / Recall@K or similar metrics.
-
-#### Expected Outcome:
-- Model trained on a large-scale dataset, able to generalise and rank unseen queries effectively.
+### 3. **Triplet Dataset**
+Create a dataset with the structure:
+- **(query, positive document, negative document)**
+- Each triplet should reflect a true match (positive) and a mismatch (negative).
 
 ---
 
-### **Phase 3: Advanced Architectures**
-
-#### Objective:
-- Experiment with more powerful models.
-
-#### Ideas to Explore:
-1. **Transformer-based Encoders**:
-   - Use BERT or DistilBERT for encoding queries and documents.
-
-2. **Separate Encoders**:
-   - Use different encoder weights for query and document.
-
-3. **Interaction-based Models**:
-   - Instead of separate embeddings, directly model query-doc interaction (e.g., concat + attention).
-
-4. **Cross-encoders vs Bi-encoders**:
-   - Evaluate trade-offs: speed (bi-encoders) vs performance (cross-encoders).
-
-5. **Re-ranking Pipeline**:
-   - Use bi-encoder for fast retrieval.
-   - Then re-rank top N using cross-encoder.
-
-6. **Loss Functions**:
-   - Explore contrastive loss, pairwise loss, etc.
-
-#### Expected Outcome:
-- Improved performance on ranking metrics with more complex architectures.
+### 4. **Training Model – Dual Tower Architecture (OFFLINE)**  
+Train two separate neural networks ("towers"):
+- **Query tower** and **Document tower**
+- Use the CBOW embedding inside both towers.
+- Apply **triplet loss** to ensure that for a given query:
+  - The positive document is **closer** than the negative document in vector space.
 
 ---
 
-### **Phase 4: Evaluation & Comparison**
-
-#### Objective:
-- Benchmark your models and understand trade-offs.
-
-#### Steps:
-1. **Evaluation Metrics**:
-   - **Precision@K**
-   - **Recall@K**
-   - **NDCG@K**
-   - **MRR (Mean Reciprocal Rank)**
-
-2. **Baselines**:
-   - Compare against:
-     - Random ranking
-     - BM25 or traditional IR model
-     - Your simple model
-     - Your best model
-
-3. **Qualitative Analysis**:
-   - Show example rankings for queries.
-   - Discuss failures and successes.
-
-4. **Performance Trade-offs**:
-   - Speed vs accuracy
-   - Simplicity vs complexity
-
-#### Expected Outcome:
-- Detailed report of model performance, qualitative analysis, and model comparison.
+### 5. **Document Encoding and Indexing (OFFLINE)**  
+Once trained:
+- Use the **document tower** to convert all documents into fixed-size vectors.
+- Store these vectors in a **vector database**, like **ChromaDB**.
+- Each vector corresponds to one document.
 
 ---
 
-## 📚 Reference Materials
-
-- **Triplet Loss Concept**:
-  - URL (archived at Claude site): [Triplet Loss Explanation](https://claude.site/artifacts/16d7e462-bfc4-4229-ae32-0b5a45a1c5a4)
-- **Datasets**:
-  - [MS MARCO](https://microsoft.github.io/msmarco/)
-
----
-
-## 👥 Teams
-
-The project is designed to be collaborative. Suggested tasks can be distributed across:
-- Data preprocessing
-- Model development
-- Training and evaluation
-- Experiment tracking
-- Presentation
+### 6. **Query Encoding and Search (ONLINE)**  
+When a user inputs a query:
+- Pass it through the **query tower** to get a query vector.
+- Use **Approximate Nearest Neighbor (ANN)** search to find the most similar document vectors stored in ChromaDB.
+- Return the top match(es).
 
 ---
 
-## ✅ Summary of Deliverables
-
-By the end of the project, you should have:
-
-- ✅ A working ranking model (simple baseline)
-- ✅ A scaled version trained on MS MARCO
-- ✅ At least one advanced architecture
-- ✅ Quantitative and qualitative evaluation
-- ✅ Documentation/report summarising findings
-
----
+### 7. **Simple Search App**
+Use **Streamlit** (or similar) to build a small app:
+- Text input field for queries.
+- Output the most relevant document(s) using your trained search engine.

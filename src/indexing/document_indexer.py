@@ -5,6 +5,7 @@ from pathlib import Path
 import chromadb
 import wandb
 import os
+from tqdm import tqdm
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -19,41 +20,52 @@ def load_model():
     """Load the trained document tower model from Weights & Biases"""
     print("Loading model from Weights & Biases...")
     
+    # Set device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
+    
     # Initialize W&B
     api = wandb.Api()
     
     # Get the most recent model artifact
     project_name = "learn-to-search"  # The project name used in train.py
     
-    # Query artifacts of type "model"
-    artifacts = api.artifacts(project_name + "/model", type="model")
-    
-    if not artifacts:
-        print("No model artifacts found in W&B. Falling back to local model.")
-        # Fallback to local model
+    try:
+        # Query artifacts of type "model"
+        artifacts = api.artifacts(project_name + "/model", type="model")
+        
+        if not artifacts:
+            print("No model artifacts found in W&B. Falling back to local model.")
+            # Fallback to local model
+            model_dir = Path(__file__).parent.parent.parent / "models" / "saved"
+            model_path = list(model_dir.glob("ranking_model_*.pt"))[0]
+            print(f"Loading local model from {model_path}")
+            checkpoint = torch.load(model_path, map_location=device)
+        else:
+            # Get latest model artifact
+            latest_artifact = artifacts[0]
+            print(f"Found model artifact: {latest_artifact.name}")
+            
+            # Download the artifact
+            model_dir = Path(__file__).parent.parent.parent / "models" / "wandb"
+            model_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Download the artifact files
+            latest_artifact.download(root=str(model_dir))
+            
+            # Find the model file in the downloaded artifact
+            model_files = list(model_dir.glob("**/*.pt"))
+            model_path = model_files[0]
+            print(f"Downloaded model to {model_path}")
+            
+            # Load the checkpoint
+            checkpoint = torch.load(model_path, map_location=device)
+    except Exception as e:
+        print(f"Error accessing W&B: {e}")
+        print("Falling back to local model...")
         model_dir = Path(__file__).parent.parent.parent / "models" / "saved"
         model_path = list(model_dir.glob("ranking_model_*.pt"))[0]
-        print(f"Loading local model from {model_path}")
-        checkpoint = torch.load(model_path)
-    else:
-        # Get latest model artifact
-        latest_artifact = artifacts[0]
-        print(f"Found model artifact: {latest_artifact.name}")
-        
-        # Download the artifact
-        model_dir = Path(__file__).parent.parent.parent / "models" / "wandb"
-        model_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Download the artifact files
-        latest_artifact.download(root=str(model_dir))
-        
-        # Find the model file in the downloaded artifact
-        model_files = list(model_dir.glob("**/*.pt"))
-        model_path = model_files[0]
-        print(f"Downloaded model to {model_path}")
-        
-        # Load the checkpoint
-        checkpoint = torch.load(model_path)
+        checkpoint = torch.load(model_path, map_location=device)
     
     # Load embedding layer and document tower
     embedding_layer, word2idx, _ = load_pretrained_embedding()
@@ -62,31 +74,51 @@ def load_model():
     # Load the document tower weights
     doc_tower.load_state_dict(checkpoint['doc_tower'])
     
+    # Move model to device
+    doc_tower = doc_tower.to(device)
+    
     # Set to evaluation mode
     doc_tower.eval()
     
-    return doc_tower, word2idx
+    return doc_tower, word2idx, device
 
 
-def encode_document(doc_text, doc_tower, word2idx, max_length=64):
-    """Convert a document text into a vector using the document tower"""
-    # Tokenize and convert to tensor
-    tokens = tokenize_text(doc_text)
-    token_ids = convert_to_token_ids(tokens, word2idx)
-    token_ids = pad_or_truncate(token_ids, max_length)
-    doc_tensor = torch.tensor(token_ids).unsqueeze(0)  # Add batch dimension
+def process_batch(doc_texts, doc_ids, doc_tower, word2idx, device, max_length=64):
+    """Process a batch of documents at once"""
+    batch_size = len(doc_texts)
+    
+    # Initialize tensor to hold all token IDs
+    all_tokens = []
+    
+    # Tokenize all documents in the batch
+    for doc_text in doc_texts:
+        tokens = tokenize_text(doc_text)
+        token_ids = convert_to_token_ids(tokens, word2idx)
+        token_ids = pad_or_truncate(token_ids, max_length)
+        all_tokens.append(token_ids)
+    
+    # Convert to tensor and move to device
+    batch_tensor = torch.tensor(all_tokens).to(device)
     
     # Encode with document tower
     with torch.no_grad():
-        doc_vector = doc_tower(doc_tensor)
+        batch_vectors = doc_tower(batch_tensor)
     
-    return doc_vector.squeeze().tolist()  # Convert to list for storage
+    # Convert to list format for ChromaDB
+    vector_list = batch_vectors.cpu().tolist()
+    
+    # Prepare results for ChromaDB
+    return {
+        "ids": doc_ids,
+        "embeddings": vector_list,
+        "metadatas": [{"text": text} for text in doc_texts]
+    }
 
 
 def index_documents():
     """Main function to encode documents and store in ChromaDB"""
     # 1. Load the model
-    doc_tower, word2idx = load_model()
+    doc_tower, word2idx, device = load_model()
     
     # 2. Load documents
     data_dir = Path(__file__).parent.parent.parent / "data" / "processed"
@@ -102,35 +134,49 @@ def index_documents():
     # Create or get collection
     try:
         client.delete_collection("passages")
-    except:
-        pass  # Collection didn't exist yet
+        print("Deleted existing collection.")
+    except Exception as e:
+        print(f"Collection didn't exist yet: {e}")
     
     collection = client.create_collection("passages")
     print("Created ChromaDB collection: passages")
     
-    # 4. Process and index all documents
-    doc_count = 0
+    # 4. Process and index documents in batches
+    batch_size = 64  # Process 64 documents at a time
+    total_docs = len(passages)
     
-    for doc_id, doc_text in passages.items():
-        # Encode document
-        doc_vector = encode_document(doc_text, doc_tower, word2idx)
+    # Convert dictionary to lists for batch processing
+    all_ids = list(passages.keys())
+    all_texts = list(passages.values())
+    
+    # Process in batches with progress bar
+    indexed_count = 0
+    for batch_start in tqdm(range(0, total_docs, batch_size), desc="Indexing batches"):
+        batch_end = min(batch_start + batch_size, total_docs)
+        
+        # Get batch of documents
+        batch_ids = all_ids[batch_start:batch_end]
+        batch_texts = all_texts[batch_start:batch_end]
+        
+        # Process batch
+        batch_data = process_batch(batch_texts, batch_ids, doc_tower, word2idx, device)
         
         # Add to ChromaDB
         collection.add(
-            ids=[doc_id],
-            embeddings=[doc_vector],
-            metadatas=[{"text": doc_text}]
+            ids=batch_data["ids"],
+            embeddings=batch_data["embeddings"],
+            metadatas=batch_data["metadatas"]
         )
         
-        doc_count += 1
-        if doc_count % 100 == 0:
-            print(f"Indexed {doc_count} documents")
+        indexed_count += len(batch_ids)
     
-    print(f"Successfully indexed {doc_count} documents in ChromaDB")
+    print(f"Successfully indexed {indexed_count} documents in ChromaDB")
     
     # 5. Test search (optional)
+    print("Running test search...")
+    test_vector_size = batch_data["embeddings"][0]
     test_results = collection.query(
-        query_embeddings=[[0.1] * len(doc_vector)],  # Random query vector for testing
+        query_embeddings=[[0.1] * len(test_vector_size)],  # Random query vector for testing
         n_results=2
     )
     print(f"Test search returned {len(test_results['ids'][0])} results")

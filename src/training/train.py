@@ -20,6 +20,11 @@ from src.data.triplet_dataset import TripletDataset
 # Load environment variables
 load_dotenv()
 
+# Set up device for GPU training if available
+# This creates a device that will be either GPU (cuda) or CPU depending on availability
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
 
 def train():
     """
@@ -52,8 +57,8 @@ def train():
 
     # Step 2: Create query and document towers
     print("Creating model towers...")
-    query_tower = QueryTower(embedding_layer)
-    doc_tower = DocumentTower(embedding_layer)
+    query_tower = QueryTower(embedding_layer).to(device)  # Move model to GPU/CPU
+    doc_tower = DocumentTower(embedding_layer).to(device)  # Move model to GPU/CPU
     print("Model towers created successfully.")
 
     # Step 3: Create dataset and dataloader
@@ -113,10 +118,10 @@ def train():
         for query_batch, pos_doc_batch, neg_doc_batch in tqdm(
             dataloader, desc=f"Epoch {epoch+1}", position=1, leave=False
         ):
-            # Move data to device (CPU in this case)
-            query_batch = query_batch
-            pos_doc_batch = pos_doc_batch
-            neg_doc_batch = neg_doc_batch
+            # Move data to device (GPU if available, otherwise CPU)
+            query_batch = query_batch.to(device)
+            pos_doc_batch = pos_doc_batch.to(device)
+            neg_doc_batch = neg_doc_batch.to(device)
 
             # Forward pass
             query_embeddings = query_tower(query_batch)

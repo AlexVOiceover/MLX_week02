@@ -3,6 +3,8 @@ import json
 import sys
 from pathlib import Path
 import chromadb
+import wandb
+import os
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -14,18 +16,50 @@ from src.utils.tokenization import tokenize_text, convert_to_token_ids, pad_or_t
 
 
 def load_model():
-    """Load the trained document tower model"""
-    # Find the most recent model file
-    model_dir = Path(__file__).parent.parent.parent / "models" / "saved"
-    model_path = list(model_dir.glob("ranking_model_*.pt"))[0]
-    print(f"Loading model from {model_path}")
+    """Load the trained document tower model from Weights & Biases"""
+    print("Loading model from Weights & Biases...")
+    
+    # Initialize W&B
+    api = wandb.Api()
+    
+    # Get the most recent model artifact
+    project_name = "learn-to-search"  # The project name used in train.py
+    
+    # Query artifacts of type "model"
+    artifacts = api.artifacts(project_name + "/model", type="model")
+    
+    if not artifacts:
+        print("No model artifacts found in W&B. Falling back to local model.")
+        # Fallback to local model
+        model_dir = Path(__file__).parent.parent.parent / "models" / "saved"
+        model_path = list(model_dir.glob("ranking_model_*.pt"))[0]
+        print(f"Loading local model from {model_path}")
+        checkpoint = torch.load(model_path)
+    else:
+        # Get latest model artifact
+        latest_artifact = artifacts[0]
+        print(f"Found model artifact: {latest_artifact.name}")
+        
+        # Download the artifact
+        model_dir = Path(__file__).parent.parent.parent / "models" / "wandb"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Download the artifact files
+        latest_artifact.download(root=str(model_dir))
+        
+        # Find the model file in the downloaded artifact
+        model_files = list(model_dir.glob("**/*.pt"))
+        model_path = model_files[0]
+        print(f"Downloaded model to {model_path}")
+        
+        # Load the checkpoint
+        checkpoint = torch.load(model_path)
     
     # Load embedding layer and document tower
     embedding_layer, word2idx, _ = load_pretrained_embedding()
     doc_tower = DocumentTower(embedding_layer)
     
-    # Load the trained weights
-    checkpoint = torch.load(model_path)
+    # Load the document tower weights
     doc_tower.load_state_dict(checkpoint['doc_tower'])
     
     # Set to evaluation mode
@@ -74,11 +108,10 @@ def index_documents():
     collection = client.create_collection("passages")
     print("Created ChromaDB collection: passages")
     
-    # 4. Process and index documents (just a small sample for demonstration)
-    sample_size = 1000  # Limit for demonstration purposes
+    # 4. Process and index all documents
     doc_count = 0
     
-    for doc_id, doc_text in list(passages.items())[:sample_size]:
+    for doc_id, doc_text in passages.items():
         # Encode document
         doc_vector = encode_document(doc_text, doc_tower, word2idx)
         

@@ -206,9 +206,21 @@ def train():
     torch.save(state_dict, model_path)
     print(f"Model saved to {model_path}")
 
-    # Log the model to W&B
-    wandb.save(str(model_path))
-
+    # Create and log model as W&B Artifact
+    model_artifact = wandb.Artifact(
+        name=f"ranking_model_{time.strftime('%Y%m%d-%H%M%S')}",
+        type="model",
+        description="Dual-tower ranking model with query and document encoders",
+        metadata=config
+    )
+    
+    # Add the model file to the artifact
+    model_artifact.add_file(str(model_path))
+    
+    # Log the artifact to W&B
+    wandb.log_artifact(model_artifact)
+    
+    print(f"Model saved as W&B artifact: {model_artifact.name}")
     print("Training complete!")
 
     # Close W&B run

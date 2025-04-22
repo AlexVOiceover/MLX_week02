@@ -27,6 +27,7 @@ ENV/
 # Data files (but not code)
 data/raw/
 data/processed/
+data/chroma/
 
 # Jupyter notebooks
 .ipynb_checkpoints
@@ -34,6 +35,8 @@ data/processed/
 # Model checkpoints and cached files
 checkpoints/
 .cache/
+models/saved/
+models/wandb/
 
 # IDE specific files
 .idea/

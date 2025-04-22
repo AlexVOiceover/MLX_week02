@@ -24,9 +24,6 @@ var/
 venv/
 ENV/
 
-# HITL folder (containing project guidelines)
-HITL/
-
 # Data files (but not code)
 data/raw/
 data/processed/

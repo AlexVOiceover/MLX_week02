@@ -35,8 +35,8 @@ def train():
     # Define hyperparameters and training config
     config = {
         "learning_rate": 0.003,
-        "batch_size": 32,
-        "epochs": 2,
+        "batch_size": 256,
+        "epochs": 10,
         "triplet_margin": 0.2,
         "embedding_model": "Apples96/cbow_model",
         "optimizer": "Adam",
@@ -75,7 +75,9 @@ def train():
 
     # Create dataloader
     batch_size = config["batch_size"]
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+    dataloader = DataLoader(
+        dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True
+    )
 
     print(f"Dataset created with {len(dataset)} triplets")
     print(f"Dataloader created with batch size {batch_size}")
@@ -211,15 +213,15 @@ def train():
         name=f"ranking_model_{time.strftime('%Y%m%d-%H%M%S')}",
         type="model",
         description="Dual-tower ranking model with query and document encoders",
-        metadata=config
+        metadata=config,
     )
-    
+
     # Add the model file to the artifact
     model_artifact.add_file(str(model_path))
-    
+
     # Log the artifact to W&B
     wandb.log_artifact(model_artifact)
-    
+
     print(f"Model saved as W&B artifact: {model_artifact.name}")
     print("Training complete!")
 

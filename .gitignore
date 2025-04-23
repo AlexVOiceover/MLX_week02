@@ -28,6 +28,10 @@ ENV/
 data/raw/
 data/processed/
 data/chroma/
+**/chroma.sqlite3
+**/*.sqlite3
+**/*.sqlite
+**/*.db
 
 # Jupyter notebooks
 .ipynb_checkpoints

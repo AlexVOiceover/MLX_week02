@@ -37,6 +37,7 @@ checkpoints/
 .cache/
 models/saved/
 models/wandb/
+artifacts/
 
 # IDE specific files
 .idea/
@@ -55,6 +56,10 @@ Thumbs.db
 
 # WandB
 wandb/
+*.wandb
+wandb-debug.log
+wandb-summary.json
+.wandb/
 
 # env
 .env

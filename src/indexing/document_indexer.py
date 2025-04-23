@@ -5,10 +5,15 @@ from pathlib import Path
 import chromadb
 import wandb
 import os
+import time
 from tqdm import tqdm
+from dotenv import load_dotenv
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import our modules
 from src.models.embeddings import load_pretrained_embedding
@@ -24,47 +29,73 @@ def load_model():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
     
-    # Initialize W&B
-    api = wandb.Api()
-    
-    # Get the most recent model artifact
-    project_name = "learn-to-search"  # The project name used in train.py
-    
+    # Dynamic W&B artifact retrieval
     try:
-        # Query artifacts of type "model"
-        artifacts = api.artifacts(project_name + "/model", type="model")
+        # Initialize W&B API
+        api = wandb.Api()
         
-        if not artifacts:
-            print("No model artifacts found in W&B. Falling back to local model.")
-            # Fallback to local model
-            model_dir = Path(__file__).parent.parent.parent / "models" / "saved"
-            model_path = list(model_dir.glob("ranking_model_*.pt"))[0]
-            print(f"Loading local model from {model_path}")
-            checkpoint = torch.load(model_path, map_location=device)
-        else:
-            # Get latest model artifact
-            latest_artifact = artifacts[0]
-            print(f"Found model artifact: {latest_artifact.name}")
+        # Define project and entity
+        entity = os.getenv("WANDB_ENTITY", "alexvoiceover-fac")  # Get from env or use default
+        project_name = "learn-to-search"
+        
+        print(f"Looking for model artifacts in {entity}/{project_name}")
+        
+        # Get runs that have model artifacts
+        runs = api.runs(f"{entity}/{project_name}")
+        
+        # Find all model artifacts
+        latest_model_artifact = None
+        
+        # Start a new run for artifact usage
+        with wandb.init(project=project_name, job_type="inference", name="indexer-run") as run:
+            # Find the latest model artifact from any run
+            for wandb_run in runs:
+                # Get artifacts of type 'model' from this run
+                for artifact in wandb_run.logged_artifacts():
+                    if artifact.type == 'model':
+                        print(f"Found model artifact: {artifact.name}")
+                        latest_model_artifact = artifact.name
+                        # We only need the latest one
+                        break
+                if latest_model_artifact:
+                    break
             
-            # Download the artifact
-            model_dir = Path(__file__).parent.parent.parent / "models" / "wandb"
-            model_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Download the artifact files
-            latest_artifact.download(root=str(model_dir))
-            
-            # Find the model file in the downloaded artifact
-            model_files = list(model_dir.glob("**/*.pt"))
-            model_path = model_files[0]
-            print(f"Downloaded model to {model_path}")
-            
-            # Load the checkpoint
-            checkpoint = torch.load(model_path, map_location=device)
+            if latest_model_artifact:
+                # Use the found artifact
+                print(f"Using model artifact: {latest_model_artifact}")
+                artifact = run.use_artifact(f"{entity}/{project_name}/{latest_model_artifact}", type='model')
+                
+                # Download the artifact
+                model_dir = Path(__file__).parent.parent.parent / "models" / "wandb"
+                model_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Download the artifact files
+                artifact_dir = artifact.download(root=str(model_dir))
+                print(f"Downloaded artifact to {artifact_dir}")
+                
+                # Find the model file in the downloaded artifact
+                model_files = list(Path(artifact_dir).glob("*.pt"))
+                if not model_files:
+                    model_files = list(Path(artifact_dir).glob("**/*.pt"))  # Try recursive search
+                    
+                if model_files:
+                    model_path = model_files[0]
+                    print(f"Found model file: {model_path}")
+                    
+                    # Load the checkpoint
+                    checkpoint = torch.load(model_path, map_location=device)
+                else:
+                    raise FileNotFoundError("No model file found in artifact")
+            else:
+                raise ValueError("No model artifacts found in any run")
+        
     except Exception as e:
-        print(f"Error accessing W&B: {e}")
+        print(f"Error with W&B artifact: {e}")
         print("Falling back to local model...")
+        # Fallback to local model
         model_dir = Path(__file__).parent.parent.parent / "models" / "saved"
         model_path = list(model_dir.glob("ranking_model_*.pt"))[0]
+        print(f"Loading local model from {model_path}")
         checkpoint = torch.load(model_path, map_location=device)
     
     # Load embedding layer and document tower
@@ -149,10 +180,19 @@ def index_documents():
     all_ids = list(passages.keys())
     all_texts = list(passages.values())
     
-    # Process in batches with progress bar
+    # Set up a single progress bar for all documents
+    print(f"Indexing {total_docs} documents in batches of {batch_size}...")
+    
+    # Create a progress bar for documents
+    progress_bar = tqdm(total=total_docs, desc="Documents indexed", unit="docs")
+    
+    # Process in batches
     indexed_count = 0
-    for batch_start in tqdm(range(0, total_docs, batch_size), desc="Indexing batches"):
+    start_time = time.time()
+    
+    for batch_start in range(0, total_docs, batch_size):
         batch_end = min(batch_start + batch_size, total_docs)
+        current_batch_size = batch_end - batch_start
         
         # Get batch of documents
         batch_ids = all_ids[batch_start:batch_end]
@@ -168,15 +208,35 @@ def index_documents():
             metadatas=batch_data["metadatas"]
         )
         
-        indexed_count += len(batch_ids)
+        # Update counters and progress
+        indexed_count += current_batch_size
+        progress_bar.update(current_batch_size)
+        
+        # Occasionally log progress (every 10% or so)
+        if indexed_count % max(total_docs // 10, batch_size) < batch_size:
+            elapsed = time.time() - start_time
+            docs_per_sec = indexed_count / elapsed
+            estimated_total = elapsed / indexed_count * total_docs
+            remaining = estimated_total - elapsed
+            
+            # Update progress bar description with rate info
+            progress_bar.set_description(
+                f"Indexing: {docs_per_sec:.1f} docs/sec"
+            )
     
-    print(f"Successfully indexed {indexed_count} documents in ChromaDB")
+    # Close progress bar
+    progress_bar.close()
+    
+    # Log final stats
+    total_time = time.time() - start_time
+    print(f"Successfully indexed {indexed_count} documents in {total_time:.1f} seconds")
+    print(f"Average indexing rate: {indexed_count/total_time:.1f} documents/second")
     
     # 5. Test search (optional)
     print("Running test search...")
-    test_vector_size = batch_data["embeddings"][0]
+    test_vector_size = len(batch_data["embeddings"][0])
     test_results = collection.query(
-        query_embeddings=[[0.1] * len(test_vector_size)],  # Random query vector for testing
+        query_embeddings=[[0.1] * test_vector_size],  # Random query vector for testing
         n_results=2
     )
     print(f"Test search returned {len(test_results['ids'][0])} results")

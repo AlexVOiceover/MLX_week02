@@ -30,7 +30,7 @@ The system consists of three main components:
 
 ### 3. Search Functionality
 - **Query Encoding**: Transforms search queries into embeddings using query tower
-- **Vector Similarity**: Finds closest document vectors in ChromaDB
+- **Vector Similarity**: Finds closest document vectors in ChromaDB using cosine similarity
 - **Result Ranking**: Returns most similar documents with relevance scores
 
 ## Workflow
@@ -175,10 +175,18 @@ This process:
 Run the interactive search interface:
 
 ```bash
+# Interactive mode
 python src/indexing/search.py
+
+# Pass a query directly
+python src/indexing/search.py --query "your search query"
 ```
 
-Type a search query to see relevant passages ranked by similarity.
+Type a search query to see relevant passages ranked by similarity. The search results include:
+
+- Document ID
+- Similarity score (using cosine similarity)
+- Preview of the document text
 
 ## W&B Integration
 

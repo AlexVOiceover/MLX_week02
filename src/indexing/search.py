@@ -1,6 +1,7 @@
 import torch
 import sys
 import os
+import argparse
 from pathlib import Path
 import chromadb
 import wandb
@@ -111,7 +112,7 @@ def load_query_model():
     return query_tower, word2idx, device
 
 
-def search():
+def search(query_text=None):
     """Simple search function to search the indexed documents"""
     # 1. Load the query tower from W&B
     query_tower, word2idx, device = load_query_model()
@@ -130,9 +131,11 @@ def search():
             print("Consider reindexing using document_indexer.py")
     except Exception as e:
         print(f"Error accessing collection: {e}")
+        return
     
     # 3. Get user query
-    query_text = input("Enter your search query: ")
+    if query_text is None:
+        query_text = input("Enter your search query: ")
     
     # 4. Process and encode query
     print("Encoding query...")
@@ -181,10 +184,15 @@ def search():
         distance = results["distances"][0][i]
         
         print(f"Result {i+1}: Document ID {doc_id}")
-        # For cosine similarity, higher values mean more similar (opposite of distance)
-        # Convert distance to similarity score for more intuitive display
+        # For cosine similarity, the distance value from ChromaDB is (1 - cosine_similarity)
+        # So we need to convert it back to a similarity score
         similarity_score = 1.0 - distance if distance <= 2.0 else "N/A (incorrect metric)"
-        print(f"Similarity: {similarity_score:.4f} (raw distance: {distance:.4f})")
+        
+        # Display similarity score
+        if isinstance(similarity_score, float):
+            print(f"Similarity: {similarity_score:.4f} (ChromaDB distance: {distance:.4f})")
+        else:
+            print(f"Similarity: {similarity_score} (ChromaDB distance: {distance:.4f})")
         # Show the beginning of the text (truncated if too long)
         preview = text[:200] + "..." if len(text) > 200 else text
         print(f"Text: {preview}")
@@ -195,4 +203,11 @@ def search():
 
 
 if __name__ == "__main__":
-    search()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Search indexed documents.')
+    parser.add_argument('--query', '-q', type=str, 
+                        help='Search query text. If not provided, will prompt for input.')
+    args = parser.parse_args()
+    
+    # Call search with the provided query, if any
+    search(args.query)

@@ -70,3 +70,7 @@ lastest-run
 
 # env
 .env
+wandb/debug-internal.log
+wandb/debug.log
+wandb/latest-run
+data/processed/matches.json

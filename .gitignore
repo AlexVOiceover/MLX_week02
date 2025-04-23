@@ -60,17 +60,18 @@ Thumbs.db
 
 # WandB
 wandb/
-*.wandb
-debug.log
-wandb-debug.log
-debug-internal.log
-wandb-summary.json
+wandb/*
 .wandb/
-lastest-run
-
-# env
-.env
+.wandb/*
+*.wandb
+wandb-debug.log
+wandb-summary.json
 wandb/debug-internal.log
 wandb/debug.log
 wandb/latest-run
+debug.log
+debug-internal.log
+
+# env
+.env
 data/processed/matches.json

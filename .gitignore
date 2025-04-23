@@ -26,7 +26,7 @@ ENV/
 
 # Data files (but not code)
 data/raw/
-# data/processed/
+data/processed/
 data/chroma/
 **/chroma.sqlite3
 **/*.sqlite3

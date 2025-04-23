@@ -61,9 +61,12 @@ Thumbs.db
 # WandB
 wandb/
 *.wandb
+debug.log
 wandb-debug.log
+debug-internal.log
 wandb-summary.json
 .wandb/
+lastest-run
 
 # env
 .env

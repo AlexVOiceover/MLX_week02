@@ -120,7 +120,16 @@ def search():
     print("Connecting to ChromaDB...")
     chroma_dir = Path(__file__).parent.parent.parent / "data" / "chroma"
     client = chromadb.PersistentClient(path=str(chroma_dir))
-    collection = client.get_collection("passages")
+    
+    # Try to get the collection, recreate with cosine similarity if needed
+    try:
+        collection = client.get_collection("passages")
+        # Check if collection has cosine similarity configured
+        if collection.metadata.get("hnsw:space") != "cosine":
+            print("Warning: Collection does not use cosine similarity. Search results may be inaccurate.")
+            print("Consider reindexing using document_indexer.py")
+    except Exception as e:
+        print(f"Error accessing collection: {e}")
     
     # 3. Get user query
     query_text = input("Enter your search query: ")
@@ -151,6 +160,13 @@ def search():
         n_results=5
     )
     
+    # Check if results make sense - if they don't, the similarity metric might be wrong
+    if results["distances"] and results["distances"][0]:
+        first_distance = results["distances"][0][0]
+        if first_distance > 1.5:  # Cosine similarity should be between -1 and 1
+            print(f"Warning: Distance values ({first_distance}) suggest incorrect similarity metric.")
+            print("Consider reindexing documents with document_indexer.py")
+    
     # 6. Display results
     print(f"\nSearch results for: '{query_text}'")
     print("-" * 50)
@@ -165,7 +181,10 @@ def search():
         distance = results["distances"][0][i]
         
         print(f"Result {i+1}: Document ID {doc_id}")
-        print(f"Similarity: {distance}")
+        # For cosine similarity, higher values mean more similar (opposite of distance)
+        # Convert distance to similarity score for more intuitive display
+        similarity_score = 1.0 - distance if distance <= 2.0 else "N/A (incorrect metric)"
+        print(f"Similarity: {similarity_score:.4f} (raw distance: {distance:.4f})")
         # Show the beginning of the text (truncated if too long)
         preview = text[:200] + "..." if len(text) > 200 else text
         print(f"Text: {preview}")

@@ -169,8 +169,11 @@ def index_documents():
     except Exception as e:
         print(f"Collection didn't exist yet: {e}")
     
-    collection = client.create_collection("passages")
-    print("Created ChromaDB collection: passages")
+    collection = client.create_collection(
+        name="passages",
+        metadata={"hnsw:space": "cosine"}  # Use cosine similarity instead of Euclidean
+    )
+    print("Created ChromaDB collection: passages with cosine similarity")
     
     # 4. Process and index documents in batches
     batch_size = 64  # Process 64 documents at a time

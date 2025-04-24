@@ -1,7 +1,12 @@
 import streamlit as st
 import sys
+import os
 from pathlib import Path
 import torch
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Import the search functionality directly (since we're in the same directory)
 from search import load_query_model, search as run_search
@@ -17,11 +22,23 @@ def get_cached_model():
 def get_chromadb_connection():
     """Cache the ChromaDB connection to avoid reconnecting between searches"""
     import chromadb
+    import os
     from pathlib import Path
     
-    print("Connecting to ChromaDB (first time only)...")
-    chroma_dir = Path(__file__).parent.parent / "data" / "index"
-    return chromadb.PersistentClient(path=str(chroma_dir))
+    # Check if we should use remote ChromaDB
+    use_remote = os.getenv("USE_REMOTE_CHROMA", "False").lower() == "true"
+    
+    if use_remote:
+        # Connect to containerized ChromaDB
+        print("Connecting to remote ChromaDB (first time only)...")
+        chroma_host = os.getenv("CHROMA_HOST", "localhost")
+        chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
+        return chromadb.HttpClient(host=chroma_host, port=chroma_port)
+    else:
+        # Use local ChromaDB
+        print("Connecting to local ChromaDB (first time only)...")
+        chroma_dir = Path(__file__).parent.parent / "data" / "index"
+        return chromadb.PersistentClient(path=str(chroma_dir))
 
 # Configure the page
 st.set_page_config(page_title="Semantic Search Engine", page_icon="🔍", layout="wide")
@@ -113,6 +130,52 @@ if (search_button or query_submitted) and query:
     display_results(query)
 elif search_button and not query:
     st.warning("Please enter a search query first.")
+
+# Display ChromaDB connection info
+st.markdown("---")
+with st.expander("📊 ChromaDB Connection Information"):
+    # Check connection type
+    use_remote = os.getenv("USE_REMOTE_CHROMA", "False").lower() == "true"
+    chroma_host = os.getenv("CHROMA_HOST", "localhost")
+    chroma_port = os.getenv("CHROMA_PORT", "8000")
+    
+    if use_remote:
+        st.info(f"🔌 Connected to remote ChromaDB at {chroma_host}:{chroma_port}")
+        
+        # If using Docker, try to get container info
+        if chroma_host == "localhost" or chroma_host == "127.0.0.1":
+            try:
+                import subprocess
+                container_info = subprocess.check_output(
+                    ["docker", "ps", "--filter", "name=chroma", "--format", "{{.Names}} ({{.Image}}) - Running since {{.RunningFor}}"]
+                ).decode().strip()
+                
+                if container_info:
+                    st.success(f"🐳 Docker container: {container_info}")
+            except:
+                st.warning("Docker container information not available")
+        
+        # Try to get collection info
+        try:
+            client = cached_client
+            collection_names = client.list_collections()
+            collection_info = []
+            
+            for coll in collection_names:
+                name = coll.name
+                try:
+                    count = client.get_collection(name).count()
+                    collection_info.append(f"{name} ({count} items)")
+                except:
+                    collection_info.append(f"{name} (count unavailable)")
+            
+            if collection_info:
+                st.write("📚 Collections:", ", ".join(collection_info))
+        except Exception as e:
+            st.error(f"Error getting collection info: {str(e)}")
+    else:
+        chroma_dir = Path(__file__).parent.parent / "data" / "index"
+        st.info(f"📂 Using local ChromaDB at {chroma_dir}")
 
 # Footer
 st.markdown("---")

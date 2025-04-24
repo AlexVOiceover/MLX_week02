@@ -51,6 +51,11 @@ MLX_week02/
 python src/launch_app.py
 ```
 
+python -m venv venv
+source venv/bin/activate
+
+
+
 Or use individual scripts:
 
 ```bash
@@ -92,6 +97,50 @@ WANDB_API_KEY=your_api_key_here
 # Triplet generation configuration
 USE_CROSS_QUERY_NEGATIVES=False   # Set to True to use cross-query negative sampling
 NEGATIVES_PER_POSITIVE=6          # Number of negative samples per positive (for cross-query strategy)
+
+# ChromaDB configuration
+USE_REMOTE_CHROMA=True            # Set to True to use remote ChromaDB
+CHROMA_HOST=localhost             # ChromaDB host address
+CHROMA_PORT=8000                  # ChromaDB port
+```
+
+## Docker Deployment
+
+You can run ChromaDB in a Docker container:
+
+### Standard ChromaDB Container
+```bash
+# Start ChromaDB container
+docker-compose up -d
+
+# Run the indexer to populate the database
+python src/indexer.py
+
+# Run the search app
+python src/launch_app.py
+```
+
+### Custom ChromaDB Image with Pre-populated Data
+You can create a custom Docker image that includes your pre-indexed data:
+
+```bash
+# Build the custom image with your data
+./build_custom_image.sh
+
+# Run the custom image
+docker-compose -f docker-compose.custom.yml up -d
+
+# To deploy to another machine:
+# 1. Save the image
+docker save chroma-with-data:latest | gzip > chroma-with-data.tar.gz
+
+# 2. On the target machine:
+# Transfer the image file
+# Load the image
+docker load < chroma-with-data.tar.gz
+
+# 3. Create docker-compose.custom.yml on target machine
+# 4. Run: docker-compose -f docker-compose.custom.yml up -d
 ```
 
 ### Negative Sampling Strategies

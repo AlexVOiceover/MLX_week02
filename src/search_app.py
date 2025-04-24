@@ -35,16 +35,25 @@ Enter a query and the system will find the most relevant documents.
 """
 )
 
-# Input for search query
-query = st.text_input("Enter your search query:", "")
-
-# Add a search button
-search_button = st.button("Search")
-
-
 # Load resources once at startup
 cached_model_resources = get_cached_model()
 cached_client = get_chromadb_connection()
+
+# Input for search query with a key to detect changes
+query = st.text_input("Enter your search query:", "", key="search_input")
+
+# Add a search button 
+search_button = st.button("Search")
+
+# Track if the query was just submitted via Enter key
+query_submitted = False
+if "previous_query" not in st.session_state:
+    st.session_state.previous_query = ""
+
+# Check if Enter was pressed (query changed but button wasn't clicked)
+if query != st.session_state.previous_query:
+    query_submitted = True
+    st.session_state.previous_query = query
 
 # Function to display search results
 def display_results(query):
@@ -99,10 +108,10 @@ def display_results(query):
             results_container.warning("Search completed but no results were found.")
 
 
-# Run search when the button is clicked
-if search_button and query:
+# Run search when the button is clicked or Enter is pressed
+if (search_button or query_submitted) and query:
     display_results(query)
-elif search_button:
+elif search_button and not query:
     st.warning("Please enter a search query first.")
 
 # Footer

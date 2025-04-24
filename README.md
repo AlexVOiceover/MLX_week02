@@ -48,7 +48,7 @@ MLX_week02/
 
 ```bash
 # Run Streamlit search app
-streamlit run src/search_app.py --server.fileWatcherType none
+streamlit run src/search_app.py
 ```
 
 Or use individual scripts:

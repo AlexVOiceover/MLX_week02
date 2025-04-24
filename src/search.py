@@ -208,12 +208,16 @@ def search(query_text=None):
         print("No results found. Try a different query.")
         return
     
-    for i in range(len(results["ids"][0])):
+    # Get the sorted indices (sort by distance: smaller = more similar)
+    sorted_indices = sorted(range(len(results["distances"][0])), key=lambda i: results["distances"][0][i])
+
+    # Display results in sorted order
+    for rank, i in enumerate(sorted_indices):
         doc_id = results["ids"][0][i]
         text = results["metadatas"][0][i]["text"]
         distance = results["distances"][0][i]
         
-        print(f"Result {i+1}: Document ID {doc_id}")
+        print(f"Result {rank+1}: Document ID {doc_id}")
         # For cosine similarity, the distance value from ChromaDB is (1 - cosine_similarity)
         # So we need to convert it back to a similarity score
         similarity_score = 1.0 - distance if distance <= 2.0 else "N/A (incorrect metric)"

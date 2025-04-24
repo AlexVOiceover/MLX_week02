@@ -29,10 +29,13 @@ data/
 data/raw/
 data/processed/
 data/chroma/
+data/index/
 **/chroma.sqlite3
 **/*.sqlite3
 **/*.sqlite
 **/*.db
+**/*.bin
+**/*.pickle
 
 # Jupyter notebooks
 .ipynb_checkpoints

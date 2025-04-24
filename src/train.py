@@ -126,6 +126,12 @@ def train():
 
     # Use tqdm for epoch tracking as well
     for epoch in tqdm(range(num_epochs), desc="Training progress", position=0):
+        # Print GPU memory usage statistics at the beginning of each epoch
+        if torch.cuda.is_available():
+            print(f"CUDA Memory allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
+            print(f"CUDA Memory cached: {torch.cuda.memory_reserved() / 1024**2:.2f} MB")
+            print(f"Number of CUDA devices: {torch.cuda.device_count()}")
+            
         # Initialize metrics for this epoch
         epoch_loss = 0.0
         batch_count = 0

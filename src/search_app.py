@@ -1,13 +1,7 @@
-# Disable Streamlit file watcher before any other imports to avoid PyTorch conflict
-import streamlit.config as streamlit_config
-streamlit_config.set_option("server.fileWatcherType", "none")
-
-# Now continue with regular imports
 import streamlit as st
 import sys
 from pathlib import Path
-# Import only necessary PyTorch components to avoid the custom class loading issue
-from torch import device, cuda
+import torch
 
 # Import the search functionality directly (since we're in the same directory)
 from search import load_query_model, search as run_search

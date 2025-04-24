@@ -6,6 +6,23 @@ import torch
 # Import the search functionality directly (since we're in the same directory)
 from search import load_query_model, search as run_search
 
+# Use Streamlit's cache_resource decorator to keep the model loaded between searches
+@st.cache_resource
+def get_cached_model():
+    """Cache the model loading to avoid reloading between searches"""
+    print("Loading model from W&B (first time only)...")
+    return load_query_model()
+
+@st.cache_resource
+def get_chromadb_connection():
+    """Cache the ChromaDB connection to avoid reconnecting between searches"""
+    import chromadb
+    from pathlib import Path
+    
+    print("Connecting to ChromaDB (first time only)...")
+    chroma_dir = Path(__file__).parent.parent / "data" / "index"
+    return chromadb.PersistentClient(path=str(chroma_dir))
+
 # Configure the page
 st.set_page_config(page_title="Semantic Search Engine", page_icon="🔍", layout="wide")
 
@@ -25,6 +42,10 @@ query = st.text_input("Enter your search query:", "")
 search_button = st.button("Search")
 
 
+# Load resources once at startup
+cached_model_resources = get_cached_model()
+cached_client = get_chromadb_connection()
+
 # Function to display search results
 def display_results(query):
     with st.spinner("Searching for relevant documents..."):
@@ -38,8 +59,8 @@ def display_results(query):
 
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
-            # Run the search and get results
-            run_search(query)
+            # Run the search with cached resources
+            run_search(query, cached_resources=cached_model_resources, cached_client=cached_client)
 
         # Parse results from stdout
         output = stdout.getvalue()

@@ -142,15 +142,24 @@ def load_query_model():
     return query_tower, word2idx, device
 
 
-def search(query_text=None):
+def search(query_text=None, cached_resources=None, cached_client=None):
     """Simple search function to search the indexed documents"""
-    # 1. Load the query tower from W&B
-    query_tower, word2idx, device = load_query_model()
+    # 1. Load the query tower from W&B or use cached resources
+    if cached_resources:
+        print("Using cached model...")
+        query_tower, word2idx, device = cached_resources
+    else:
+        print("Loading model from W&B...")
+        query_tower, word2idx, device = load_query_model()
     
-    # 2. Connect to ChromaDB
-    print("Connecting to ChromaDB...")
-    chroma_dir = Path(__file__).parent.parent / "data" / "index"
-    client = chromadb.PersistentClient(path=str(chroma_dir))
+    # 2. Connect to ChromaDB or use cached client
+    if cached_client:
+        print("Using cached ChromaDB connection...")
+        client = cached_client
+    else:
+        print("Connecting to ChromaDB...")
+        chroma_dir = Path(__file__).parent.parent / "data" / "index"
+        client = chromadb.PersistentClient(path=str(chroma_dir))
     
     # Try to get the collection, recreate with cosine similarity if needed
     try:

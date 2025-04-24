@@ -25,6 +25,7 @@ venv/
 ENV/
 
 # Data files (but not code)
+data/
 data/raw/
 data/processed/
 data/chroma/

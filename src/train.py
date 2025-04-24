@@ -40,6 +40,12 @@ def train():
         "triplet_margin": 0.2,
         "embedding_model": "Apples96/cbow_model_full",
         "optimizer": "Adam",
+        # Add negative sampling configuration from environment
+        "use_cross_query_negatives": os.getenv(
+            "USE_CROSS_QUERY_NEGATIVES", "False"
+        ).lower()
+        == "true",
+        "negatives_per_positive": int(os.getenv("NEGATIVES_PER_POSITIVE", "6")),
     }
 
     # Initialize Weights & Biases
@@ -64,6 +70,14 @@ def train():
     # Step 3: Create dataset and dataloader
     print("Setting up dataset and dataloader...")
     data_dir = Path(__file__).parent.parent / "data" / "processed"
+
+    # Log negative sampling strategy
+    if config["use_cross_query_negatives"]:
+        print(
+            f"\nUsing CROSS-QUERY negative sampling with {config['negatives_per_positive']} negatives per positive"
+        )
+    else:
+        print("\nUsing IN-QUERY negative sampling")
 
     # Create dataset
     dataset = TripletDataset(

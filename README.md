@@ -92,3 +92,29 @@ Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
+
+## Configuration
+
+The project uses environment variables from a `.env` file for configuration:
+
+```
+# W&B API key
+WANDB_API_KEY=your_api_key_here
+
+# Triplet generation configuration
+USE_CROSS_QUERY_NEGATIVES=False   # Set to True to use cross-query negative sampling
+NEGATIVES_PER_POSITIVE=6          # Number of negative samples per positive (for cross-query strategy)
+```
+
+### Negative Sampling Strategies
+
+The system supports two strategies for generating training triplets:
+
+1. **In-Query Negatives (Default)**: Negative examples are taken from the same query's suggested documents.
+   - Uses passages that were actually suggested for the query but weren't selected
+   - Tends to create "harder" negative examples since they were similar enough to be suggested
+
+2. **Cross-Query Negatives**: Negative examples are randomly sampled from documents associated with other queries.
+   - Creates more diverse negative examples
+   - May help the model learn broader distinctions between relevant and irrelevant documents
+   - Configure using `USE_CROSS_QUERY_NEGATIVES=True` in the `.env` file

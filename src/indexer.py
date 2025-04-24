@@ -208,20 +208,38 @@ def index_documents():
     print(f"Loaded {len(passages)} documents")
 
     # 3. Initialize ChromaDB
-    chroma_dir = Path(__file__).parent.parent / "data" / "index"
+    # Check if we should use remote ChromaDB
+    use_remote = os.getenv("USE_REMOTE_CHROMA", "False").lower() == "true"
     
-    # Clean up existing ChromaDB directory to prevent accumulation of old indices
-    if chroma_dir.exists():
-        import shutil
-        print(f"Cleaning ChromaDB directory: {chroma_dir}")
-        shutil.rmtree(chroma_dir)
+    if use_remote:
+        # Connect to containerized ChromaDB
+        print("Connecting to remote ChromaDB...")
+        chroma_host = os.getenv("CHROMA_HOST", "localhost")
+        chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
+        client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
         
-    # Create a fresh directory
-    chroma_dir.mkdir(parents=True, exist_ok=True)
-    print(f"Created fresh ChromaDB directory at {chroma_dir}")
+        # Try to reset the collection if it exists
+        try:
+            client.delete_collection("passages")
+            print("Deleted existing remote collection")
+        except Exception as e:
+            print(f"No existing remote collection to delete: {e}")
+    else:
+        # Use local ChromaDB
+        chroma_dir = Path(__file__).parent.parent / "data" / "index"
         
-    # Create new ChromaDB client
-    client = chromadb.PersistentClient(path=str(chroma_dir))
+        # Clean up existing ChromaDB directory to prevent accumulation of old indices
+        if chroma_dir.exists():
+            import shutil
+            print(f"Cleaning ChromaDB directory: {chroma_dir}")
+            shutil.rmtree(chroma_dir)
+            
+        # Create a fresh directory
+        chroma_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Created fresh ChromaDB directory at {chroma_dir}")
+            
+        # Create new ChromaDB client
+        client = chromadb.PersistentClient(path=str(chroma_dir))
 
     # Create new collection (no need to delete since we cleaned the directory)
     collection = client.create_collection(

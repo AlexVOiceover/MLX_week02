@@ -79,3 +79,6 @@ debug-internal.log
 # env
 .env
 data/processed/matches.json
+
+# Image of Chroma with data
+chroma-with-data.tar.gz

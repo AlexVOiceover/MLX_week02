@@ -13,3 +13,4 @@ huggingface_hub
 wandb
 python-dotenv
 chromadb
+streamlit

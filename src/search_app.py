@@ -1,7 +1,8 @@
 import streamlit as st
 import sys
 from pathlib import Path
-import torch
+# Import only necessary PyTorch components to avoid the custom class loading issue
+from torch import device, cuda
 
 # Import the search functionality directly (since we're in the same directory)
 from search import load_query_model, search as run_search

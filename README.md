@@ -45,25 +45,10 @@ MLX_week02/
 3. **Indexing**: Create document vectors and store in ChromaDB
 4. **Search**: Retrieve documents using semantic search
 
-## Usage
-
-You can use the main script to run the different parts of the system:
 
 ```bash
-# Process data
-python scripts/main.py process
-
-# Train model
-python scripts/main.py train
-
-# Index documents
-python scripts/main.py index
-
-# Search
-python scripts/main.py search --query "your search query"
-
 # Run Streamlit search app
-streamlit run src/search_app.py
+streamlit run src/search_app.py --server.fileWatcherType none
 ```
 
 Or use individual scripts:

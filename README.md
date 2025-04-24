@@ -131,16 +131,16 @@ You can create a custom Docker image that includes your pre-indexed data:
 docker-compose -f docker-compose.custom.yml up -d
 
 # To deploy to another machine:
-# 1. Save the image
-docker save chroma-with-data:latest | gzip > chroma-with-data.tar.gz
+# 1. Build and save the image in one step
+./build_custom_image.sh
 
-# 2. On the target machine:
-# Transfer the image file
-# Load the image
-docker load < chroma-with-data.tar.gz
+# 2. Copy to target machine:
+# - chroma-with-data.tar.gz
+# - docker-compose.custom.yml 
+# - deploy_chroma.sh
 
-# 3. Create docker-compose.custom.yml on target machine
-# 4. Run: docker-compose -f docker-compose.custom.yml up -d
+# 3. On the target machine, run:
+./deploy_chroma.sh
 ```
 
 ### Negative Sampling Strategies

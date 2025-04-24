@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script builds a custom ChromaDB image with your data
+# This script builds a custom ChromaDB image with your data and saves it to a file
 
 # Step 1: Make sure ChromaDB is running and data is indexed
 echo "Checking if ChromaDB container is running..."
@@ -31,6 +31,17 @@ docker-compose -f docker-compose.custom.yml build
 echo "Tagging image as chroma-with-data:latest"
 docker tag mlx_week02-chroma:latest chroma-with-data:latest
 
-echo "Your custom ChromaDB image is ready!"
-echo "You can run it locally with: docker-compose -f docker-compose.custom.yml up -d"
-echo "Or save it for distribution with: docker save chroma-with-data:latest | gzip > chroma-with-data.tar.gz"
+# Step 5: Save the image to a file
+echo "Saving image to chroma-with-data.tar.gz..."
+docker save chroma-with-data:latest | gzip > chroma-with-data.tar.gz
+
+echo "✅ Your custom ChromaDB image is ready!"
+echo "📦 Image saved to: $(pwd)/chroma-with-data.tar.gz ($(du -h chroma-with-data.tar.gz | cut -f1) in size)"
+echo ""
+echo "To run it locally:"
+echo "  docker-compose -f docker-compose.custom.yml up -d"
+echo ""
+echo "To deploy on another machine:"
+echo "1. Copy chroma-with-data.tar.gz and docker-compose.custom.yml to the target machine"
+echo "2. Run: docker load < chroma-with-data.tar.gz"
+echo "3. Run: docker-compose -f docker-compose.custom.yml up -d"

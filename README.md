@@ -61,6 +61,9 @@ python scripts/main.py index
 
 # Search
 python scripts/main.py search --query "your search query"
+
+# Run Streamlit search app
+streamlit run src/search_app.py
 ```
 
 Or use individual scripts:

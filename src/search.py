@@ -227,9 +227,8 @@ def search(query_text=None):
             print(f"Similarity: {similarity_score:.4f} (ChromaDB distance: {distance:.4f})")
         else:
             print(f"Similarity: {similarity_score} (ChromaDB distance: {distance:.4f})")
-        # Show the beginning of the text (truncated if too long)
-        preview = text[:200] + "..." if len(text) > 200 else text
-        print(f"Text: {preview}")
+        # Show the full text
+        print(f"Text: {text}")
         print("-" * 50)
     
     # Finish the wandb run
